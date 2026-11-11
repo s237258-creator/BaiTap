@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+opencv-python
+numpy
+ultralytics
+pillow
+absl-py
+sounddevice
+# mediapipe kéo theo opencv-contrib-python, xung đột với opencv-python (cùng module cv2).
+# Cài riêng không kèm phụ thuộc:  pip install --no-deps mediapipe

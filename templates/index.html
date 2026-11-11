@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGuard AI - Giám sát thông minh</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo">🛡️ EduGuard AI</div>
+        <div class="header-info">
+            Hệ thống giám sát giáo dục thông minh
+        </div>
+    </header>
+
+    <div class="container">
+
+        <section class="welcome">
+            <h1>Hệ thống giám sát tự động</h1>
+            <p>
+                Phát hiện hành vi sử dụng thiết bị di động, quay đầu, liếc mắt, tư thế bất thường
+                và gian lận hình ảnh trong môi trường kiểm tra bằng AI.
+            </p>
+        </section>
+
+        <!-- Thêm phần thông tin sinh viên -->
+        <section class="student-info-card">
+            <h3>👤 Thông tin thí sinh dự thi</h3>
+            <div class="form-group" style="display: flex; gap: 15px; margin-top: 10px;">
+                <input type="text" id="studentName" placeholder="Họ và tên sinh viên"
+                    style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <input type="text" id="studentId" placeholder="Mã sinh viên (MSSV)"
+                    style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+        </section>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>Trạng thái hệ thống</h3>
+                <p id="systemStatus" class="status">Chưa kết nối camera</p>
+            </div>
+
+            <div class="card card-clickable" id="violationCard" title="Bấm để xem lịch sử vi phạm">
+                <h3>Số lần vi phạm <span class="card-hint">(Xem log ▾)</span></h3>
+                <p id="detectionCount" class="number">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Trạng thái AI</h3>
+                <p id="aiStatus" class="status">Sẵn sàng</p>
+            </div>
+        </div>
+
+        <section class="monitor">
+            <h2>📷 Giám sát camera trực tiếp</h2>
+            <p class="description">
+                Camera sẽ được sử dụng để phân tích hành vi và lưu lại bằng chứng khi có gian lận.
+                Khi bắt đầu, hãy <b>ngồi thẳng và nhìn vào màn hình</b> trong khoảng 3 giây để hệ thống hiệu chuẩn.
+            </p>
+
+            <div class="monitor-grid">
+                <div>
+                    <div class="camera-container">
+                        <video id="camera" autoplay playsinline muted></video>
+                        <canvas id="overlay"></canvas>
+                        <div id="calibrationBox" class="calibration hidden">
+                            <div>🎯 Đang hiệu chuẩn... Hãy nhìn thẳng vào màn hình</div>
+                            <div class="progress">
+                                <div id="calibrationBar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button id="startBtn">Bật camera</button>
+                        <button id="stopBtn" disabled>Tắt camera</button>
+                        <button id="recalibrateBtn" type="button" class="secondary-btn" disabled
+                            title="Chạy lại 3 giây hiệu chuẩn tư thế nhìn thẳng">🎯 Hiệu chuẩn lại</button>
+                        <button id="resetHistoryBtn" type="button" class="danger-btn"
+                            title="Xóa sạch số lần vi phạm, ảnh bằng chứng và log của MSSV này">🗑️ Xóa lịch sử</button>
+                        <a id="reportLink" class="report-link hidden" target="_blank">⬇ Tải báo cáo CSV</a>
+                    </div>
+                </div>
+
+                <aside class="live-panel">
+                    <h3>📊 Phân tích thời gian thực</h3>
+                    <div id="identityBox" class="identity-box">
+                        <img id="refAvatar" class="ref-avatar hidden" alt="Khuôn mặt gốc" />
+                        <div class="identity-info">
+                            <div class="identity-title">🪪 Danh tính thí sinh</div>
+                            <div id="mIdentity" class="identity-status">Chưa đăng ký khuôn mặt</div>
+                        </div>
+                    </div>
+                    <table class="metrics">
+                        <tr>
+                            <td>Số khuôn mặt</td>
+                            <td id="mFaces">-</td>
+                        </tr>
+                        <tr>
+                            <td>Quay đầu (Trái/Phải)</td>
+                            <td id="mYaw">-</td>
+                        </tr>
+                        <tr>
+                            <td>Cúi/ngửa đầu</td>
+                            <td id="mPitch">-</td>
+                        </tr>
+                        <tr>
+                            <td>Hướng mắt ngang</td>
+                            <td id="mGazeH">-</td>
+                        </tr>
+                        <tr>
+                            <td>Hướng mắt dọc</td>
+                            <td id="mGazeV">-</td>
+                        </tr>
+                        <tr>
+                            <td>Chớp mắt gần nhất</td>
+                            <td id="mBlink">-</td>
+                        </tr>
+                        <tr>
+                            <td>Độ sáng / Độ nét</td>
+                            <td id="mImage">-</td>
+                        </tr>
+                    </table>
+                    <h4>Hành vi đang nghi ngờ</h4>
+                    <div id="activeFlags" class="flags">Không có</div>
+                    <h4>Thống kê theo loại</h4>
+                    <div id="countsBox" class="flags">Chưa có</div>
+                    <h4>⚡ Lịch sử vi phạm (Logs gọn)</h4>
+                    <div id="compactLogBox" class="compact-logs">Chưa có vi phạm</div>
+                </aside>
+            </div>
+
+            <div id="alertBox" class="alert hidden">
+                ⚠️ CẢNH BÁO: PHÁT HIỆN HÀNH VI GIAN LẬN (SỬ DỤNG ĐIỆN THOẠI)!
+            </div>
+
+            <p id="result">Hệ thống đang chờ khởi động.</p>
+        </section>
+
+        <section class="history" id="historySection">
+            <div class="history-header">
+                <h2>📋 Nhật ký vi phạm &amp; Bằng chứng</h2>
+                <div class="history-controls">
+                    <select id="logFilter" class="log-select">
+                        <option value="ALL">Tất cả loại vi phạm</option>
+                    </select>
+                    <div class="view-toggle">
+                        <button type="button" id="viewCompactBtn" class="toggle-btn active">Dạng gọn</button>
+                        <button type="button" id="viewDetailBtn" class="toggle-btn">Chi tiết</button>
+                    </div>
+                    <button type="button" id="loadHistoryBtn" class="secondary-btn"
+                        title="Tải lại toàn bộ lịch sử đã lưu của MSSV này">📂 Tải lịch sử MSSV</button>
+                </div>
+            </div>
+            <div id="logSummary" class="log-summary hidden"></div>
+            <div id="logList">
+                Chưa có dữ liệu vi phạm.
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        EduGuard AI © 2026
+    </footer>
+
+    <script>
+        // Tự động nạp camera.js dù mở từ FastAPI (127.0.0.1:8000) hay từ PyCharm Preview (localhost:63342)
+        const s = document.createElement("script");
+        s.src = (window.location.port === "8000") ? "/static/js/camera.js" : "../static/js/camera.js";
+        document.body.appendChild(s);
+    </script>
+
+</body>
+
+</html>
